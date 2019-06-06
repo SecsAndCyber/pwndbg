@@ -9,7 +9,17 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-import readline
+
+try:
+    import readline
+except ImportError:
+    """
+        This can error on some GDB instances
+        Encountered on docker `debian:jessie`
+    # (gdb) pi import pwndbg
+    # Python Exception <type 'exceptions.ImportError'> readline module disabled under GDB:
+    """
+    readline = None
 
 import gdb
 
@@ -21,6 +31,9 @@ parser.add_argument('count', type=int, nargs='?',
                     help='The amount of history entries to display')
 @pwndbg.commands.ArgparsedCommand(parser)
 def history(count=10):
+    if readline is None:
+        print("Command history not supported due to import error")
+        return
     history_length = readline.get_current_history_length()
     history = reversed([readline.get_history_item(i) for i in range(history_length)])
     history = list(history)[:min(count, history_length)]
